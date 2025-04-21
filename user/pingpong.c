@@ -6,6 +6,8 @@ int
 main(int argc, char *argv[])
 {
   int p[2];
+  int buf[1];
+
   if(argc != 1){
     fprintf(2, "Usage: no extra argument...");
     exit(1);
@@ -13,14 +15,14 @@ main(int argc, char *argv[])
 
   pipe(p);
   if (fork() == 0){
-    read(p[0],"0", 1);
+    read(p[0],buf, 1);
     printf("%d: received ping\n", getpid());
     write(p[1], "0", 1);
     exit(0);
   } else {
     write(p[1], "0", 1);
     wait(0);
-    read(p[0], "0", 1);
+    read(p[0], buf, 1);
     printf("%d: received pong\n", getpid());
     exit(0);
   }
