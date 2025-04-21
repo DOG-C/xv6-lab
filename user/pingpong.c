@@ -5,25 +5,48 @@
 int
 main(int argc, char *argv[])
 {
-  int p[2];
-  int buf[1];
+  int p_to_c[2];
+  int c_to_p[2];
+  char buf[1];
 
   if(argc != 1){
-    fprintf(2, "Usage: no extra argument...");
+    fprintf(2, "Usage: no extra argument...\n");
     exit(1);
   }
 
-  pipe(p);
+  pipe(p_to_c);
+  pipe(c_to_p);
   if (fork() == 0){
-    read(p[0],buf, 1);
+    if (read(p_to_c[0],buf, 1) != 1){
+      fprintf(2, "pingpong: child failed to read\n");
+      exit(1);
+    }
+    close(p_to_c[0]);
+    
     printf("%d: received ping\n", getpid());
-    write(p[1], "0", 1);
+
+    if(write(c_to_p[1], buf, 1) != 1){
+      fprintf(2, "pingpong: child failed to write\n");
+      exit(1);
+    }
+    close(c_to_p[1]);
     exit(0);
   } else {
-    write(p[1], "0", 1);
+    if(write(p_to_c[1], buf, 1) != 1){
+      fprintf(2, "pingpong: parent failed to write\n");
+      exit(1);
+    }
+    close(p_to_c[1]);
     wait(0);
-    read(p[0], buf, 1);
+
+    if (read(c_to_p[0],buf, 1) != 1){
+      fprintf(2, "pingpong: parent failed to read\n");
+      exit(1);
+    }
+    close(c_to_p[0]);
+
     printf("%d: received pong\n", getpid());
+    
     exit(0);
   }
 
